@@ -258,6 +258,7 @@ M <- M %>% filter(PY != 2025)
 
 setwd(here("Dados"))
 #saveRDS(M, "BASE DE DADOS.RDS")
+
 M <- readRDS("BASE DE DADOS.RDS") 
 # mainInfo
 
@@ -554,7 +555,7 @@ to_ca[is.na(to_ca)] <- 0
 
 to_ca <- column_to_rownames(to_ca, var = "TERMO")
 
-res.ca <- ca(to_ca, graph = T)
+res.ca <- CA(to_ca, graph = T)
 eig <- as.data.frame(get_eigenvalue(res.ca))
 
 fviz_eig(res.ca)
@@ -570,13 +571,13 @@ ggplot(eig, aes(x = Dimensao, y = variance.percent)) +
 
 ggsave("grafico 8.png", width = 16, height = 10, units = "cm", dpi = 300)
 
-df <- rbind(as.data.frame(res.ca$rowcoord) %>% rownames_to_column(var = "TERMO") %>% 
+df <- rbind(as.data.frame(res.ca$row$coord) %>% rownames_to_column(var = "TERMO") %>% 
               mutate(label = ifelse(TERMO %in% c("Election", "Vote", "Citizenship", "Public Opinion"), 
                                     "Comportamental", "Institucional")),
-            as.data.frame(res.ca$colcoord) %>% rownames_to_column(var = "TERMO") %>% mutate(label = "Periódico"))
+            as.data.frame(res.ca$col$coord) %>% rownames_to_column(var = "TERMO") %>% mutate(label = "Periódico"))
 
 
-ggplot(df, aes(x = Dim1, y = Dim2)) +
+ggplot(df, aes(x = `Dim 1`, y = `Dim 2`)) +
   geom_hline(yintercept = 0, color = "grey", lty = "dashed") +
   geom_vline(xintercept = 0, color = "grey", lty = "dashed") +
   geom_point(aes(color = label)) +
