@@ -301,6 +301,7 @@ FI <- data.frame(SO = c("CPS", "WPOL",
 
 MainInfo <- MainInfo %>% left_join(FI, by = "SO")
 
+stargazer::stargazer(MainInfo, type = "latex", summary = F)
 
 setwd(here("Dados"))
 write.xlsx(MainInfo, "MAININFO.xlsx")
@@ -356,8 +357,8 @@ ggplot(M_SCOPUS, aes(x = IBI)) +
   scale_x_continuous(breaks = seq(-4, 4, 1)) +
   annotation_custom(grob = z, xmin = 1, xmax = 4, ymin = .2, ymax = .4)
 
-  
-ggsave("grafico 6.png", width = 16, height = 9, units = "cm", dpi = 300)
+setwd(here("Dados"))  
+ggsave("grafico 6_1.png", width = 16, height = 9, units = "cm", dpi = 300)
 # JOURNAL X IBI
 
 g <- ggplot(M_SCOPUS, aes(x = SO, y = IBI)) +
@@ -393,6 +394,8 @@ tfidf <- a %>%
   group_by(TIKAB) %>% summarise(n = sum(n),
                                 tfidf = sum(tf_idf)) %>% 
   arrange(-tfidf)
+
+write.xlsx(tfidf %>% head(100), "tabela a1.xlsx")
 
 print(tfidf, n = 20)
 
@@ -521,6 +524,8 @@ contagem <- THEO_TYPE %>% group_by(TERMO) %>% summarise(n = sum(CHECK),
          TERMO = gsub("_", " ", TERMO), 
          TERMO = str_to_title(TERMO)) %>% 
   arrange(-FIT)
+
+write.xlsx(contagem, "tabela a2.xlsx")
 
 ggplot(contagem %>% head(15) %>% 
          mutate(label = ifelse(TERMO %in% c("Election", "Vote", "Citizenship", "Public Opinion"), 
