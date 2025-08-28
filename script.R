@@ -193,6 +193,24 @@ setwd(here("Dados"))
 ggsave("grafico 4.png", width = 16, height = 9, units = "cm", dpi = 300)
 
 
+
+# para slides
+
+library(ggalt)
+
+ggplot(df, aes(x = instbeh, y = expobs)) +
+  geom_hline(yintercept = 0, color = "grey30", lty = "dashed") +
+  geom_vline(xintercept = 0, color = "grey30", lty = "dashed") +
+  geom_smooth(se = F, color = "black", method = "lm", size = .5) +
+  geom_text(x = -1.8, y = 2.5, label = "Zona Cinzenta") +
+  geom_encircle(data = df %>% filter(instbeh <= -1.5 & expobs >= 1.8), fill = "grey") +
+  geom_point() +
+  labs(x = "ΔInst-Comp", y = "ΔObs-Exp")
+
+setwd(here("Dados"))
+ggsave("grafico 4_1.png", width = 16, height = 9, units = "cm", dpi = 300)
+
+
 # capítulo empírico 1 / metodologia------
 
 setwd(here("Dados", "scopus"))
@@ -1600,26 +1618,26 @@ ggsave("grafico 15.png")
 setwd(here())
 
 D_man <- read_xlsx("papers experiementais.xlsx") %>% 
-  filter(exp_type != "NA" &
-           exp_type != "0") # 195 porque 7 artigos não foram encontrados e nem os autores enviaram o paper por email
+  filter(exp_type_manual != "NA" &
+           exp_type_manual != "0") # 195 porque 7 artigos não foram encontrados e nem os autores enviaram o paper por email
 
 nrow(D_man)/nrow(D)
 
 D_out <- read_xlsx("papers experiementais.xlsx") %>% 
-  filter(exp_type == "NA") # 195 porque 7 artigos não foram encontrados e nem os autores enviaram o paper por email
+  filter(exp_type_manual == "NA") # 195 porque 7 artigos não foram encontrados e nem os autores enviaram o paper por email
 table(D_out$SO)
 
 
 D_man %>% 
-  group_by(exp_type) %>% 
+  group_by(exp_type_manual) %>% 
   summarise(n = n()) %>% arrange(-n)
 
-exp <- D_man %>% cSplit('exp_type', sep = ";", direction = "long") %>% 
-  group_by(exp_type) %>% 
+exp <- D_man %>% cSplit('exp_type_manual', sep = ";", direction = "long") %>% 
+  group_by(exp_type_manual) %>% 
   summarise(n = n()) %>% arrange(-n) %>% 
   mutate(prop = percent(n/nrow(D_man), accuracy = 0.1))
 
-ggplot(exp, aes(x = reorder(exp_type, n), y = n)) +
+ggplot(exp, aes(x = reorder(exp_type_manual, n), y = n)) +
   geom_bar(stat = "identity", width = .6, fill = "tomato3", color = "black") +
   geom_text(aes(label = paste0(n, " (", prop, ")"), vjust = -.5)) +
   labs(x = "Tipo de Experimento", y = "Qtd. Artigos Experimentais") +
@@ -1632,11 +1650,11 @@ ggsave("grafico 16.png", width = 16, height = 10, units = "cm", dpi = 300)
 
 (103+29+27+11+2+1)/nrow(D_man)
 
-exp_py_type <- D_man %>% cSplit('exp_type', sep = ";", direction = "long") %>%
-  group_by(exp_type, PY) %>% summarise(n = n())
+exp_py_type <- D_man %>% cSplit('exp_type_manual', sep = ";", direction = "long") %>%
+  group_by(exp_type_manual, PY) %>% summarise(n = n())
 
-ggplot(exp_py_type %>% filter(exp_type %in% c("Field", "Laboratory")), aes(x = PY, y = n)) +
-  geom_line(aes(color = exp_type))
+ggplot(exp_py_type %>% filter(exp_type_manual %in% c("Field", "Laboratory")), aes(x = PY, y = n)) +
+  geom_line(aes(color = exp_type_manual))
 
 
 h <- data.frame(t(coef(res))) %>% 
@@ -1650,17 +1668,17 @@ h <- h %>% gather(key = "type", value = "nmf", `Democracia e Participação`:`Po
 h <- h %>% group_by(CODE) %>% mutate(check = ifelse(nmf == max(nmf), 1, 0)) %>% 
   filter(check == 1)
 
-h <- h %>% left_join(D_man %>% select(CODE, exp_type) %>% cSplit('exp_type', sep = ";", direction = "long"))
+h <- h %>% left_join(D_man %>% select(CODE, exp_type_manual) %>% cSplit('exp_type_manual', sep = ";", direction = "long"))
 
 
 glimpse(h)
 to_ca <- h %>% 
-  group_by(type, exp_type) %>% summarise(n = n()) %>% 
+  group_by(type, exp_type_manual) %>% summarise(n = n()) %>% 
   spread(type, n)
 
 to_ca[is.na(to_ca)] <- 0
 
-to_ca <- column_to_rownames(to_ca, var = "exp_type")
+to_ca <- column_to_rownames(to_ca, var = "exp_type_manual")
 
 res.ca <- CA(to_ca, graph = T)
 eig <- as.data.frame(get_eigenvalue(res.ca))
@@ -1716,19 +1734,19 @@ ggsave("grafico 18.png", width = 16, height = 12, units = "cm", dpi = 300)
 
 
 
-field <- D_man %>% filter(str_detect(exp_type, "Field"))
+field <- D_man %>% filter(str_detect(exp_type_manual, "Field"))
 
 set.seed(1995) # meu ano de nascimento
 
 field <- sample(field$CODE, size = 1)
 
-lab <- D_man %>% filter(str_detect(exp_type, "Lab"))
+lab <- D_man %>% filter(str_detect(exp_type_manual, "Lab"))
 
 set.seed(1995) # meu ano de nascimento
 
 lab <- sample(lab$CODE, size = 1)
 
-survey <- D_man %>% filter(str_detect(exp_type, "Survey|Conjoint|Vignette|List"))
+survey <- D_man %>% filter(str_detect(exp_type_manual, "Survey|Conjoint|Vignette|List"))
 
 set.seed(1995) 
 
@@ -1744,7 +1762,14 @@ survey
 D_man %>% filter(CODE == field) %>% dplyr::select(TI)
 D_man %>% filter(CODE == lab) %>% dplyr::select(TI)
 D_man %>% filter(CODE == survey) %>% dplyr::select(TI)
-D_man %>% filter(CODE == "ID 352") %>% dplyr::select(TI)
+
+info <- D %>% filter(CODE %in% c(field, lab, survey))
+setwd(here())
+#write.xlsx(info, "3 papers escolhidos.xlsx")
+
+info <- read_xlsx("3 papers escolhidos.xlsx", sheet = 2)
+
+stargazer::stargazer(info, summary = F)
 
 # download dos artigos
 
